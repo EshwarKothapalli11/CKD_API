@@ -11,6 +11,7 @@ app = FastAPI(
     version="1.0"
 )
 
+
 class CKDInput(BaseModel):
     age: float = Field(..., gt=0, le=120)
     bp: float = Field(..., gt=0, le=250)
@@ -27,10 +28,23 @@ class CKDInput(BaseModel):
     wc: float = Field(..., ge=0)
     rc: float = Field(..., ge=0)
 
+    rbc: str = "normal"
+    pc: str = "normal"
+    pcc: str = "notpresent"
+    ba: str = "notpresent"
+    htn: str = "no"
+    dm: str = "no"
+    cad: str = "no"
+    appet: str = "good"
+    pe: str = "no"
+    ane: str = "no"
+
+
 total_requests = 0
 successful_predictions = 0
 failed_requests = 0
 total_response_time = 0.0
+
 
 @app.get("/")
 def home():
@@ -42,6 +56,7 @@ def home():
         "documentation": "/docs"
     }
 
+
 @app.get("/health")
 def health():
     return {
@@ -49,18 +64,20 @@ def health():
         "service": "CKD Prediction API"
     }
 
+
 @app.get("/model-info")
 def model_info():
     return {
         "model_name": "CKD Random Forest Classifier",
         "version": "1.0",
         "algorithm": "Random Forest",
-        "number_of_features": 14,
+        "number_of_features": 24,
         "accuracy": 0.9643,
         "precision": 0.9459,
         "recall": 1.0,
         "f1_score": 0.9722
     }
+
 
 @app.post("/predict")
 def predict(data: CKDInput):
@@ -72,12 +89,14 @@ def predict(data: CKDInput):
 
     try:
         input_data = pd.DataFrame([data.model_dump()])
+
         prediction = model.predict(input_data)[0]
         probability = model.predict_proba(input_data)[0].max()
 
         result = "CKD" if prediction == "ckd" else "Not CKD"
 
         successful_predictions += 1
+
         response_time = time.time() - start_time
         total_response_time += response_time
 
@@ -91,10 +110,12 @@ def predict(data: CKDInput):
 
     except Exception as e:
         failed_requests += 1
+
         return {
             "error": "Prediction failed",
             "details": str(e)
         }
+
 
 @app.get("/metrics")
 def metrics():
@@ -107,8 +128,11 @@ def metrics():
         "total_requests": total_requests,
         "successful_predictions": successful_predictions,
         "failed_requests": failed_requests,
-        "average_response_time_seconds": round(average_response_time, 6)
+        "average_response_time_seconds": round(
+            average_response_time, 6
+        )
     }
+
 
 @app.get("/ready")
 def ready():
