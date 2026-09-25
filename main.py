@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import joblib
 import pandas as pd
@@ -55,6 +56,11 @@ def home():
         "description": "REST API for Chronic Kidney Disease prediction",
         "documentation": "/docs"
     }
+
+
+@app.get("/frontend")
+def frontend():
+    return FileResponse("index.html")
 
 
 @app.get("/health")
